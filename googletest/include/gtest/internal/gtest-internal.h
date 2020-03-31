@@ -1131,13 +1131,13 @@ struct IndexSequence {
 // Double the IndexSequence, and one if plus_one is true.
 template <bool plus_one, typename T, size_t sizeofT>
 struct DoubleSequence;
-template <size_t... I, size_t sizeofT>
-struct DoubleSequence<true, IndexSequence<I...>, sizeofT> {
-  using type = IndexSequence<I..., (sizeofT + I)..., 2 * sizeofT>;
+template <size_t... GI, size_t sizeofT>
+struct DoubleSequence<true, IndexSequence<GI...>, sizeofT> {
+  using type = IndexSequence<GI..., (sizeofT + GI)..., 2 * sizeofT>;
 };
-template <size_t... I, size_t sizeofT>
-struct DoubleSequence<false, IndexSequence<I...>, sizeofT> {
-  using type = IndexSequence<I..., (sizeofT + I)...>;
+template <size_t... GI, size_t sizeofT>
+struct DoubleSequence<false, IndexSequence<GI...>, sizeofT> {
+  using type = IndexSequence<GI..., (sizeofT + GI)...>;
 };
 
 // Backport of std::make_index_sequence.
@@ -1157,14 +1157,14 @@ struct Ignore {
 
 template <typename>
 struct ElemFromListImpl;
-template <size_t... I>
-struct ElemFromListImpl<IndexSequence<I...>> {
+template <size_t... GI>
+struct ElemFromListImpl<IndexSequence<GI...>> {
   // We make Ignore a template to solve a problem with MSVC.
   // A non-template Ignore would work fine with `decltype(Ignore(I))...`, but
   // MSVC doesn't understand how to deal with that pack expansion.
   // Use `0 * I` to have a single instantiation of Ignore.
   template <typename R>
-  static R Apply(Ignore<0 * I>..., R (*)(), ...);
+  static R Apply(Ignore<0 * GI>..., R (*)(), ...);
 };
 
 template <size_t N, typename... T>
@@ -1177,12 +1177,12 @@ struct ElemFromList {
 template <typename... T>
 class FlatTuple;
 
-template <typename Derived, size_t I>
+template <typename Derived, size_t GI>
 struct FlatTupleElemBase;
 
-template <typename... T, size_t I>
-struct FlatTupleElemBase<FlatTuple<T...>, I> {
-  using value_type = typename ElemFromList<I, T...>::type;
+template <typename... T, size_t GI>
+struct FlatTupleElemBase<FlatTuple<T...>, GI> {
+  using value_type = typename ElemFromList<GI, T...>::type;
   FlatTupleElemBase() = default;
   explicit FlatTupleElemBase(value_type t) : value(std::move(t)) {}
   value_type value;
@@ -1220,14 +1220,14 @@ class FlatTuple
   FlatTuple() = default;
   explicit FlatTuple(T... t) : FlatTuple::FlatTupleBase(std::move(t)...) {}
 
-  template <size_t I>
-  const typename ElemFromList<I, T...>::type& Get() const {
-    return static_cast<const FlatTupleElemBase<FlatTuple, I>*>(this)->value;
+  template <size_t GI>
+  const typename ElemFromList<GI, T...>::type& Get() const {
+    return static_cast<const FlatTupleElemBase<FlatTuple, GI>*>(this)->value;
   }
 
-  template <size_t I>
-  typename ElemFromList<I, T...>::type& Get() {
-    return static_cast<FlatTupleElemBase<FlatTuple, I>*>(this)->value;
+  template <size_t GI>
+  typename ElemFromList<GI, T...>::type& Get() {
+    return static_cast<FlatTupleElemBase<FlatTuple, GI>*>(this)->value;
   }
 };
 

@@ -790,9 +790,9 @@ class ValueArray {
   }
 
  private:
-  template <typename T, size_t... I>
-  std::vector<T> MakeVector(IndexSequence<I...>) const {
-    return std::vector<T>{static_cast<T>(v_.template Get<I>())...};
+  template <typename T, size_t... GI>
+  std::vector<T> MakeVector(IndexSequence<GI...>) const {
+    return std::vector<T>{static_cast<T>(v_.template Get<GI>())...};
   }
 
   FlatTuple<Ts...> v_;
@@ -816,17 +816,17 @@ class CartesianProductGenerator
   }
 
  private:
-  template <class I>
+  template <class GI>
   class IteratorImpl;
-  template <size_t... I>
-  class IteratorImpl<IndexSequence<I...>>
+  template <size_t... GI>
+  class IteratorImpl<IndexSequence<GI...>>
       : public ParamIteratorInterface<ParamType> {
    public:
     IteratorImpl(const ParamGeneratorInterface<ParamType>* base,
              const std::tuple<ParamGenerator<T>...>& generators, bool is_end)
         : base_(base),
-          begin_(std::get<I>(generators).begin()...),
-          end_(std::get<I>(generators).end()...),
+          begin_(std::get<GI>(generators).begin()...),
+          end_(std::get<GI>(generators).end()...),
           current_(is_end ? end_ : begin_) {
       ComputeCurrentValue();
     }
@@ -867,8 +867,8 @@ class CartesianProductGenerator
 
       bool same = true;
       bool dummy[] = {
-          (same = same && std::get<I>(current_) ==
-                              std::get<I>(typed_other->current_))...};
+          (same = same && std::get<GI>(current_) ==
+                              std::get<GI>(typed_other->current_))...};
       (void)dummy;
       return same;
     }
@@ -892,12 +892,12 @@ class CartesianProductGenerator
 
     void ComputeCurrentValue() {
       if (!AtEnd())
-        current_value_ = std::make_shared<ParamType>(*std::get<I>(current_)...);
+        current_value_ = std::make_shared<ParamType>(*std::get<GI>(current_)...);
     }
     bool AtEnd() const {
       bool at_end = false;
       bool dummy[] = {
-          (at_end = at_end || std::get<I>(current_) == std::get<I>(end_))...};
+          (at_end = at_end || std::get<GI>(current_) == std::get<GI>(end_))...};
       (void)dummy;
       return at_end;
     }
